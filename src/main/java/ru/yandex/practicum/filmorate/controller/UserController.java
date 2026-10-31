@@ -19,6 +19,7 @@ import java.util.Map;
 public class UserController {
 
     private final Map<Long, User> users = new HashMap<>();
+    private long currentId = 0;
 
     @GetMapping
     public Collection<User> findAll() {
@@ -65,7 +66,17 @@ public class UserController {
         oldUser.setBirthday(newUser.getBirthday());
 
         log.info("Обновлён пользователь с id={}", oldUser.getId());
-        return oldUser;
+        return copyUser(oldUser);
+    }
+
+    private User copyUser(User user) {
+        User copy = new User();
+        copy.setId(user.getId());
+        copy.setLogin(user.getLogin());
+        copy.setEmail(user.getEmail());
+        copy.setName(user.getName());
+        copy.setBirthday(user.getBirthday());
+        return copy;
     }
 
     private void validateUser(User user) {
@@ -80,7 +91,7 @@ public class UserController {
         }
 
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().matches("(?s).*\\s.*")) {
-            log.warn("Ошибка валидации пользователя: логин пустой " + "или содержит пробельные символы");
+            log.warn("Ошибка валидации пользователя: логин пустой или содержит пробельные символы");
             throw new ValidationException("Логин не может быть пустым или содержать пробельные символы");
         }
 
@@ -102,8 +113,6 @@ public class UserController {
     }
 
     private long getNextId() {
-        long currentMaxId = users.keySet().stream().mapToLong(id -> id).max().orElse(0);
-
-        return ++currentMaxId;
+        return ++currentId;
     }
 }
